@@ -2,17 +2,19 @@ package main
 
 import (
 	"crypto/ed25519"
-	"crypto/x509"
 	"encoding/base64"
 	"fmt"
+	"github.com/google/certificate-transparency-go/x509"
 	"github.com/miekg/dns"
+	"github.com/rhine-team/RHINE-Prototype/offlineAuth/rhine"
+	"os"
 	"strings"
 	"time"
 )
 
 const (
 	DNSrhineCertPrefix = "_rhinecert."
-	DNSdspprefix       = "_dsp."
+	DNSdsumprefix      = "_dsum."
 
 	txtrhinecertprefix = "rhineCert Ed25519"
 	txtsigvalueprefix  = "rhineSig "
@@ -21,7 +23,7 @@ const (
 
 type ROA struct {
 	rcert  *dns.TXT
-	dsp    *dns.TXT
+	dsum   *dns.TXT
 	dnskey *dns.DNSKEY
 	keySig *dns.RRSIG
 }
@@ -38,13 +40,19 @@ func Size(m *dns.Msg) {
 	m.Extra = append(m.Extra, o)
 }
 
-func verifyRhineROA(roa *ROA, cert []byte) bool {
-	_, publiKey, err := ParseVerifyRhineCertTxtEntry(roa.rcert, cert)
+func verifyRhineROA(roa *ROA, certFile string, pubKeyFile string) bool {
+	rcert, publiKey, err := ParseVerifyRhineCertTxtEntry(roa.rcert, certFile)
 	if err != nil {
 		fmt.Printf("[RHINE] RCert parse faild, error: %s\n", err.Error())
 		return false
 	}
 	fmt.Printf("[RHINE] RCert successfully parsed\n")
+
+	_, err = ParseVerifyDSum(roa.dsum, rcert, pubKeyFile)
+	if err != nil {
+		fmt.Printf("[RHINE] Failed to parse and verify DSum, err: %s", err.Error())
+		return false
+	}
 
 	if err := roa.keySig.VerifyWithPublicKey(publiKey, []dns.RR{roa.dnskey}); err != nil {
 		fmt.Printf("[RHINE] RhineSig verification failed, %s \n", err)
@@ -54,8 +62,29 @@ func verifyRhineROA(roa *ROA, cert []byte) bool {
 		return true
 	}
 }
+func ParseVerifyDSum(txt *dns.TXT, rcert *x509.Certificate, pubFile string) (dSum *rhine.DSum, err error) {
+	entries := txt.Txt
+	entry := strings.Join(entries, "")
 
-func ParseVerifyRhineCertTxtEntry(txt *dns.TXT, CaCert []byte) (*x509.Certificate, ed25519.PublicKey, error) {
+	dSum = &rhine.DSum{}
+	if err = dSum.DeserializeFromString(entry); err != nil {
+		return nil, err
+	}
+
+	pub, err := rhine.PublicKeyFromFile(pubFile)
+	if err != nil {
+		return nil, err
+	}
+
+	if !dSum.Verify(pub, rcert) {
+		fmt.Printf("[RHINE] Failed to validate DSum\n")
+	} else {
+		fmt.Printf("[RHINE] DSum verified\n")
+	}
+
+	return dSum, nil
+}
+func ParseVerifyRhineCertTxtEntry(txt *dns.TXT, certFile string) (*x509.Certificate, ed25519.PublicKey, error) {
 	//TODO support other key types
 	entries := txt.Txt
 	entry := strings.Join(entries, " ")
@@ -65,6 +94,7 @@ func ParseVerifyRhineCertTxtEntry(txt *dns.TXT, CaCert []byte) (*x509.Certificat
 
 	certdecoded, _ := base64.StdEncoding.DecodeString(encodedcert)
 
+	CaCert, err := os.ReadFile(certFile)
 	cert, err := x509.ParseCertificate(certdecoded)
 	if err != nil {
 		fmt.Println("Parsing Rhine Cert failed! ", err)
@@ -94,7 +124,7 @@ func extractROAFromMsg(msg *dns.Msg) (roa *ROA, domain string, ok bool) {
 		rcert  *dns.TXT
 		dnskey *dns.DNSKEY
 		keySig *dns.RRSIG
-		dsp    *dns.TXT
+		dSum   *dns.TXT
 	)
 	for _, r := range msg.Extra {
 		switch r.Header().Rrtype {
@@ -104,8 +134,8 @@ func extractROAFromMsg(msg *dns.Msg) (roa *ROA, domain string, ok bool) {
 			txt := r.(*dns.TXT)
 			if IsRCert(txt) {
 				rcert = txt
-			} else if IsDSP(txt) {
-				dsp = txt
+			} else if IsDSum(txt) {
+				dSum = txt
 			}
 		case dns.TypeRRSIG:
 			rrsig := r.(*dns.RRSIG)
@@ -129,7 +159,7 @@ func extractROAFromMsg(msg *dns.Msg) (roa *ROA, domain string, ok bool) {
 	}
 	domain = strings.SplitAfter(rcert.Header().Name, DNSrhineCertPrefix)[1]
 	fmt.Printf("[RHINE] ROA successfully extracted from response\n")
-	return &ROA{keySig: keySig, rcert: rcert, dnskey: dnskey, dsp: dsp}, domain, true
+	return &ROA{keySig: keySig, rcert: rcert, dnskey: dnskey, dsum: dSum}, domain, true
 }
 
 func rhineRRSigCheck(in *dns.Msg, key *dns.DNSKEY) {
@@ -165,8 +195,8 @@ func IsRCert(txt *dns.TXT) bool {
 	return strings.HasPrefix(txt.Header().Name, DNSrhineCertPrefix)
 }
 
-func IsDSP(txt *dns.TXT) bool {
-	return strings.HasPrefix(txt.Header().Name, DNSdspprefix)
+func IsDSum(txt *dns.TXT) bool {
+	return strings.HasPrefix(txt.Header().Name, DNSdsumprefix)
 }
 
 func IsRhineSig(txt *dns.TXT) bool {

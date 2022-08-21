@@ -4,7 +4,10 @@ import (
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/rsa"
+	"encoding/base64"
 	"fmt"
+	"github.com/google/certificate-transparency-go/x509"
+	"github.com/rhine-team/RHINE-Prototype/offlineAuth/rhine"
 	"io"
 	"os"
 	"path/filepath"
@@ -22,6 +25,11 @@ import (
 type Pair struct {
 	Public  *dns.DNSKEY
 	KeyTag  uint16
+	Private crypto.Signer
+}
+
+type RCertPair struct {
+	Rcert   *x509.Certificate
 	Private crypto.Signer
 }
 
@@ -116,4 +124,135 @@ func keyTag(ps []Pair) string {
 		s += strconv.Itoa(int(p.KeyTag)) + ","
 	}
 	return s[:len(s)-1]
+}
+func rCertParse(c *caddy.Controller) (pair *RCertPair, err error) {
+	if !c.NextArg() {
+		return nil, c.ArgErr()
+	}
+	config := dnsserver.GetConfig(c)
+	switch c.Val() {
+	case "file":
+		if !c.NextArg() {
+			return nil, c.ArgErr()
+		}
+		k := c.Val()
+		base := k
+
+		// Kmiek.nl.+013+26205.key, handle .private or without extension: Kmiek.nl.+013+26205
+		if strings.HasSuffix(k, ".key") {
+			base = k[:len(k)-4]
+		}
+		if strings.HasSuffix(k, ".private") {
+			base = k[:len(k)-8]
+		}
+		if !filepath.IsAbs(base) && config.Root != "" {
+			base = filepath.Join(config.Root, base)
+		}
+
+		pair, err = readRCertPair(base+"_private.pem", base+"_cert.pem")
+		if err != nil {
+			return nil, err
+		}
+
+	case "directory":
+		return nil, fmt.Errorf("directory: not implemented")
+	}
+
+	return pair, nil
+}
+
+func readRCertPair(private, cert string) (*RCertPair, error) {
+	rcert, err := rhine.LoadCertificatePEM(cert)
+	if err != nil {
+		return &RCertPair{}, err
+	}
+	privkey, err := rhine.LoadPrivateKeyEd25519(private)
+	if err != nil {
+		return &RCertPair{}, err
+	}
+	return &RCertPair{Rcert: rcert, Private: privkey}, nil
+}
+
+func loggerKeyParse(c *caddy.Controller) (priv ed25519.PrivateKey, err error) {
+	if !c.NextArg() {
+		return nil, c.ArgErr()
+	}
+	config := dnsserver.GetConfig(c)
+	switch c.Val() {
+	case "file":
+		if !c.NextArg() {
+			return nil, c.ArgErr()
+		}
+		k := c.Val()
+		base := k
+		if !filepath.IsAbs(base) && config.Root != "" {
+			base = filepath.Join(config.Root, base)
+		}
+		priv, err = rhine.LoadPrivateKeyEd25519(base)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return priv, nil
+}
+
+const certprefix = "_rhinecert."
+const dsumprefix = "_dsum."
+const txtcertvalueprefix = "rhineCert Ed25519 "
+
+func createCertRR(cert *x509.Certificate, origin string) dns.RR {
+	certRR := dns.TXT{}
+	if origin == "." {
+		origin = ""
+	}
+	certRR.Hdr = dns.RR_Header{
+		Name:   certprefix + origin,
+		Rrtype: dns.TypeTXT,
+		Class:  dns.ClassINET,
+		Ttl:    604800,
+	}
+
+	txtvalue := base64.StdEncoding.EncodeToString(cert.Raw)
+	certRR.Txt = split255TXT(txtcertvalueprefix + txtvalue)
+
+	return &certRR
+
+}
+
+func createDSumRR(dsum *rhine.DSum, origin string) dns.RR {
+	dsumRR := dns.TXT{}
+	if origin == "." {
+		origin = ""
+	}
+	dsumRR.Hdr = dns.RR_Header{
+		Name:   dsumprefix + origin,
+		Rrtype: dns.TypeTXT,
+		Class:  dns.ClassINET,
+		Ttl:    604800,
+	}
+
+	txtvalue, err := dsum.SerializeToString()
+	if err != nil {
+		log.Error("can't create DSum RR, failed to serialize dsum to string")
+	}
+	dsumRR.Txt = split255TXT(txtvalue)
+
+	return &dsumRR
+
+}
+
+func split255TXT(in string) []string {
+	tmp := in
+	res := []string{}
+
+	for len(tmp) > 255 {
+		res = append(res, tmp[:255])
+		tmp = tmp[255:]
+
+	}
+
+	if len(tmp) > 0 {
+		res = append(res, tmp)
+	}
+	return res
 }

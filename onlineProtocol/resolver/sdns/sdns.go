@@ -19,10 +19,8 @@ import (
 const version = "1.2.1"
 
 var (
-	flagcfgpath  = flag.String("config", "sdns.conf", "location of the config file, if config file not found, a config will generate")
-	flagprintver = flag.Bool("v", false, "show version information")
-
-	cfg *config.Config
+	flagcfgpath = flag.String("config", "sdns.conf", "location of the config file, if config file not found, a config will generate")
+	cfg         *config.Config
 )
 
 func init() {
@@ -71,11 +69,6 @@ func run() {
 
 func main() {
 	flag.Parse()
-
-	if *flagprintver {
-		println("SDNS v" + version)
-		os.Exit(0)
-	}
 
 	log.Info("Starting sdns...", "version", version)
 

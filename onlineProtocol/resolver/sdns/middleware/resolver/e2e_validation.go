@@ -2,9 +2,11 @@ package resolver
 
 import (
 	"crypto/ed25519"
-	"crypto/x509"
 	"encoding/base64"
+	"errors"
+	"github.com/google/certificate-transparency-go/x509"
 	"github.com/miekg/dns"
+	"github.com/rhine-team/RHINE-Prototype/offlineAuth/rhine"
 	"github.com/semihalev/log"
 	"hash/fnv"
 	"os"
@@ -15,7 +17,7 @@ import (
 const (
 	// TODO for rootzone
 	DNSrhineCertPrefix = "_rhinecert."
-	DNSdspprefix       = "_dsp."
+	DNSdsumprefix      = "_dsum."
 	txtrhinecertprefix = "rhineCert Ed25519"
 
 	_RO               = 1 << 14 // RHINE OK
@@ -24,19 +26,25 @@ const (
 
 type ROA struct {
 	rcert  *dns.TXT
-	dsp    *dns.TXT
+	dSum   *dns.TXT
 	dnskey *dns.DNSKEY
 	keySig *dns.RRSIG
 }
 
-func verifyRhineROA(roa *ROA, certFile string) bool {
-	_, publiKey, err := ParseVerifyRhineCertTxtEntry(roa.rcert, certFile)
+func verifyRhineROA(roa *ROA, certFile string, pubFile string) bool {
+	rcert, publiKey, err := ParseVerifyRhineCertTxtEntry(roa.rcert, certFile)
 	if err != nil {
 		log.Warn(err.Error())
 		return false
 	}
 	log.Debug("RCert successfully parsed")
-	// TODO add more key type
+
+	_, err = ParseVerifyDSum(roa.dSum, rcert, pubFile)
+	if err != nil {
+		log.Warn(err.Error())
+		return false
+	}
+
 	sig := roa.keySig
 	key := roa.dnskey
 	var expired string
@@ -52,6 +60,26 @@ func verifyRhineROA(roa *ROA, certFile string) bool {
 	return true
 }
 
+func ParseVerifyDSum(txt *dns.TXT, rcert *x509.Certificate, pubFile string) (dSum *rhine.DSum, err error) {
+	entries := txt.Txt
+	entry := strings.Join(entries, "")
+
+	dSum = &rhine.DSum{}
+	if err = dSum.DeserializeFromString(entry); err != nil {
+		return nil, err
+	}
+
+	pub, err := rhine.PublicKeyFromFile(pubFile)
+	if err != nil {
+		return nil, err
+	}
+
+	if !dSum.Verify(pub, rcert) {
+		return nil, errors.New("failed to validate DSum")
+	}
+
+	return dSum, nil
+}
 func ParseVerifyRhineCertTxtEntry(txt *dns.TXT, certFile string) (*x509.Certificate, ed25519.PublicKey, error) {
 	//TODO support other key types
 	entries := txt.Txt
@@ -93,7 +121,7 @@ func extractROAFromMsg(msg *dns.Msg) (roa *ROA, ok bool) {
 		rcert  *dns.TXT
 		dnskey *dns.DNSKEY
 		keySig *dns.RRSIG
-		dsp    *dns.TXT
+		dsum   *dns.TXT
 	)
 	rrs := msg.Answer
 	rrs = append(rrs, msg.Extra...)
@@ -105,8 +133,8 @@ func extractROAFromMsg(msg *dns.Msg) (roa *ROA, ok bool) {
 			txt := r.(*dns.TXT)
 			if IsRCert(txt) {
 				rcert = txt
-			} else if IsDSP(txt) {
-				dsp = txt
+			} else if IsDSum(txt) {
+				dsum = txt
 			}
 		case dns.TypeRRSIG:
 			rrsig := r.(*dns.RRSIG)
@@ -120,23 +148,23 @@ func extractROAFromMsg(msg *dns.Msg) (roa *ROA, ok bool) {
 		return nil, false
 	}
 
-	return &ROA{keySig: keySig, rcert: rcert, dnskey: dnskey, dsp: dsp}, true
+	return &ROA{keySig: keySig, rcert: rcert, dnskey: dnskey, dSum: dsum}, true
 }
 
 func addROAToMsg(roa *ROA, msg *dns.Msg) {
 	msg.Extra = append(msg.Extra, roa.dnskey)
 	msg.Extra = append(msg.Extra, roa.rcert)
 	msg.Extra = append(msg.Extra, roa.keySig)
-	if roa.dsp != nil {
-		msg.Extra = append(msg.Extra, roa.dsp)
+	if roa.dSum != nil {
+		msg.Extra = append(msg.Extra, roa.dSum)
 	}
 }
 func IsRCert(txt *dns.TXT) bool {
 	return strings.HasPrefix(txt.Header().Name, DNSrhineCertPrefix)
 }
 
-func IsDSP(txt *dns.TXT) bool {
-	return strings.HasPrefix(txt.Header().Name, DNSdspprefix)
+func IsDSum(txt *dns.TXT) bool {
+	return strings.HasPrefix(txt.Header().Name, DNSdsumprefix)
 }
 
 func rhineRRSigCheck(in *dns.Msg, key *dns.DNSKEY) bool {

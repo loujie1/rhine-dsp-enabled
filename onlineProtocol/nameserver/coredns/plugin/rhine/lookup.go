@@ -2,6 +2,7 @@ package rhine
 
 import (
 	"context"
+	"strings"
 
 	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin/file/rrutil"
@@ -204,8 +205,18 @@ func (z *Zone) Lookup(ctx context.Context, state request.Request, qname string, 
 			rrs = append(rrs, sigs...)
 		}
 		if qtype == dns.TypeDNSKEY {
-			additional = z.rhineDelegationProcessing(additional)
+			// TODO(lou)
+			n := dns.CompareDomainName(z.origin, qname)
+			nsplit := dns.SplitDomainName(qname)
+			var candidate string
+			if len(nsplit)-n > 0 {
+				candidate = dns.Fqdn(strings.Join(nsplit[len(nsplit)-n-1:], "."))
+			} else {
+				candidate = z.origin
+			}
+			additional = z.rhineDelegationProcessing(additional, candidate)
 		}
+
 		return rrs, ap.ns(appendRRSIGs), additional, Success
 	}
 
@@ -434,7 +445,7 @@ func (z *Zone) additionalProcessing(answer []dns.RR, do bool) (extra []dns.RR) {
 	return extra
 }
 
-func (z *Zone) rhineDelegationProcessing(rrs []dns.RR) []dns.RR {
+func (z *Zone) rhineDelegationProcessing(rrs []dns.RR, childzone string) []dns.RR {
 	tr := z.Tree
 	apex := z.origin
 	if z.origin == "." {
@@ -445,18 +456,11 @@ func (z *Zone) rhineDelegationProcessing(rrs []dns.RR) []dns.RR {
 		Rcert := rcert.Type(dns.TypeTXT)
 		rrs = append(rrs, Rcert...)
 	}
-	if rSig, ok := tr.Search("_dsp." + apex); ok {
+	if dsum, ok := tr.Search("_dsum." + apex); ok {
 		log.Info("Found DSP")
-		RhineSig := rSig.Type(dns.TypeTXT)
-		rrs = append(rrs, RhineSig...)
+		Dsum := dsum.Type(dns.TypeTXT)
+		rrs = append(rrs, Dsum...)
 	}
-	//if zoneAuth, ok := tr.Search(z.origin); ok {
-	//	rrs = append(rrs, zoneAuth.Type(dns.TypeDNSKEY)...)
-	//
-	//	sigs := zoneAuth.Type(dns.TypeRRSIG)
-	//	sig := rrutil.SubTypeSignature(sigs, dns.TypeDNSKEY)
-	//	rrs = append(rrs, sig...)
-	//}
 
 	return rrs
 }

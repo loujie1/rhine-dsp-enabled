@@ -110,7 +110,6 @@ func (n *Nds) ConstructDSum() DSum {
 		},
 		Alv:  n.Nds.Al,
 		Cert: n.Nds.TbsCert,
-		Exp:  n.Nds.Exp,
 	}
 	return res
 }
