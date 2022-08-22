@@ -57,7 +57,7 @@ forwarderservers = [
 api = "127.0.0.1:8080"
 
 # What kind of information should be logged, Log verbosity level [crit,error,warn,info,debug]
-loglevel = "info"
+loglevel = "debug"
 
 # The location of access log file, left blank for disabled. SDNS uses Common Log Format by default.
 # accesslog = ""
@@ -137,7 +137,9 @@ qname_min_level = 5
 emptyzones = []
   
 cacertificatefile = "./certificates/CACert.pem"
-
+  
+loggerpubkeyfile = "./testdata/logger/log.pem"
+  
 scion = false
 # You can add your own plugins to sdns. The plugin order is very important. 
 # Plugins can be load before cache middleware.

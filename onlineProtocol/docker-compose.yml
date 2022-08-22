@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   root:
-    image: "coredns"
+    image: "server_dsp"
     ports:
       - "10000:53/udp"
     volumes:
@@ -12,41 +12,113 @@ services:
       app_net:
         ipv4_address: 172.16.238.10
   
-  com:
-    image: "coredns"
+  l1:
+    image: "server_dsp"
     ports:
       - "10001:53/udp"
     volumes:
       - ./testdata/nameserver:/nameserver/
     working_dir: /nameserver/
-    command: -conf Corefile_com
+    command: -conf l1
     networks:
       app_net:
         ipv4_address: 172.16.238.11
   
-  rhine-test:
-    image: "coredns"
+  l2:
+    image: "server_dsp"
     ports:
       - "10002:53/udp"
     volumes:
       - ./testdata/nameserver:/nameserver/
     working_dir: /nameserver/
-    command: -conf Corefile_rhine
+    command: -conf l2
     networks:
       app_net:
         ipv4_address: 172.16.238.12
-  
-  resolver:
-    image: "sdns"
+
+  l3:
+    image: "server_dsp"
     ports:
       - "10003:53/udp"
+    volumes:
+      - ./testdata/nameserver:/nameserver/
+    working_dir: /nameserver/
+    command: -conf l3
+    networks:
+      app_net:
+        ipv4_address: 172.16.238.13
+
+  l4:
+    image: "server_dsp"
+    ports:
+      - "10004:53/udp"
+    volumes:
+      - ./testdata/nameserver:/nameserver/
+    working_dir: /nameserver/
+    command: -conf l4
+    networks:
+      app_net:
+        ipv4_address: 172.16.238.14
+
+  l5:
+    image: "server_dsp"
+    ports:
+      - "10005:53/udp"
+    volumes:
+      - ./testdata/nameserver:/nameserver/
+    working_dir: /nameserver/
+    command: -conf l5
+    networks:
+      app_net:
+        ipv4_address: 172.16.238.15
+
+  l6:
+    image: "server_dsp"
+    ports:
+      - "10006:53/udp"
+    volumes:
+      - ./testdata/nameserver:/nameserver/
+    working_dir: /nameserver/
+    command: -conf l6
+    networks:
+      app_net:
+        ipv4_address: 172.16.238.16
+
+  l7:
+    image: "server_dsp"
+    ports:
+      - "10007:53/udp"
+    volumes:
+      - ./testdata/nameserver:/nameserver/
+    working_dir: /nameserver/
+    command: -conf l7
+    networks:
+      app_net:
+        ipv4_address: 172.16.238.17
+
+  l8:
+    image: "server_dsp"
+    ports:
+      - "10008:53/udp"
+    volumes:
+      - ./testdata/nameserver:/nameserver/
+    working_dir: /nameserver/
+    command: -conf l8
+    networks:
+      app_net:
+        ipv4_address: 172.16.238.18
+
+  resolver:
+    image: "resolver_dsp"
+    ports:
+      - "10009:53/udp"
     volumes:
       - ./testdata/resolver:/resolver/
     working_dir: /resolver/
     command: -config=./config.yml
     networks:
       app_net:
-        ipv4_address: 172.16.238.13
+        ipv4_address: 172.16.238.19
     depends_on:
       - root
 

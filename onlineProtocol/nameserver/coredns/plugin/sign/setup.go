@@ -66,6 +66,22 @@ func parse(c *caddy.Controller) (*Sign, error) {
 
 		for c.NextBlock() {
 			switch c.Val() {
+			case "rcert":
+				pair, err := rCertParse(c)
+				if err != nil {
+					return sign, err
+				}
+				for i := range signers {
+					signers[i].rCertPair = pair
+				}
+			case "logger":
+				priv, err := loggerKeyParse(c)
+				if err != nil {
+					return sign, err
+				}
+				for i := range signers {
+					signers[i].loggerKey = priv
+				}
 			case "key":
 				pairs, err := keyParse(c)
 				if err != nil {

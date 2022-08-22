@@ -141,7 +141,7 @@ func (h *DNSHandler) handle(ctx context.Context, req *dns.Msg) *dns.Msg {
 			if !ok {
 				log.Info(errNoROA.Error())
 			}
-			if !verifyRhineROA(roa, h.cfg.CACertificateFile) {
+			if !verifyRhineROA(roa, h.cfg.CACertificateFile, h.cfg.LoggerPubKeyFile) {
 				log.Info("The ROA verify failed!")
 				//return dnsutil.SetRcode(req, dns.RcodeServerFailure, do)
 			}
@@ -171,7 +171,7 @@ func (h *DNSHandler) handle(ctx context.Context, req *dns.Msg) *dns.Msg {
 						log.Info("Failed to get ROA, error", err, err.Error())
 						break
 					} else {
-						if !verifyRhineROA(RoA, h.cfg.CACertificateFile) {
+						if !verifyRhineROA(RoA, h.cfg.CACertificateFile, h.cfg.LoggerPubKeyFile) {
 							log.Info("The ROA verify failed!")
 							//return dnsutil.SetRcode(req, dns.RcodeServerFailure, do)
 						}

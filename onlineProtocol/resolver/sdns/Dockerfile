@@ -1,25 +1,14 @@
 ARG image=golang:1.17.0-alpine3.14
 
-FROM $image AS builder
+FROM debian:stable-slim
 
-COPY . /go/src/github.com/semihalev/sdns/
-
-WORKDIR /go/src/github.com/semihalev/sdns
-
-RUN apk --update --no-cache add \
-	ca-certificates \
-	gcc \
-	git \
-	musl-dev
-
-RUN go build -ldflags "-linkmode external -extldflags -static -s -w" -o /tmp/sdns \
-	&& strip --strip-all /tmp/sdns
-
+RUN apt-get update && apt-get -uy upgrade
+RUN apt-get -y install ca-certificates && update-ca-certificates
 
 FROM scratch
 
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /tmp/sdns /sdns
+COPY --from=0 /etc/ssl/certs /etc/ssl/certs
+ADD sdns /sdns
 
 EXPOSE 53/tcp
 EXPOSE 53/udp

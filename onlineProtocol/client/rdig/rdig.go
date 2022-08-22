@@ -15,8 +15,10 @@
 package main
 
 import (
+	"encoding/csv"
 	"flag"
 	"fmt"
+	"github.com/semihalev/log"
 	"net"
 	"os"
 	"strconv"
@@ -34,7 +36,7 @@ var (
 	dnssec       = flag.Bool("dnssec", false, "request DNSSEC records")
 	query        = flag.Bool("question", false, "show question")
 	check        = flag.Bool("check", false, "check internal DNSSEC consistency")
-	rhine        = flag.Bool("rhine", false, "check rhine consistency")
+	rhineCheck   = flag.Bool("rhine", false, "check rhine consistency")
 	six          = flag.Bool("6", false, "use IPv6 only")
 	four         = flag.Bool("4", false, "use IPv4 only")
 	anchor       = flag.String("anchor", "", "use the DNSKEY in this file as trust anchor")
@@ -55,6 +57,9 @@ var (
 	client       = flag.String("client", "", "set edns client-subnet option")
 	opcode       = flag.String("opcode", "query", "set opcode to query|update|notify")
 	rcode        = flag.String("rcode", "success", "set rcode to noerror|formerr|nxdomain|servfail|...")
+	flagcfgpath  = flag.String("config", "q.conf", "location of the config file, if config file not found, a config will generate")
+	output       = flag.String("output", "output.csv", "location of the output file")
+	chain        = flag.String("chain", "3", "length of delegation chain")
 )
 
 func main() {
@@ -62,6 +67,16 @@ func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [options] [@server] [qtype...] [qclass...] [name ...]\n", os.Args[0])
 		flag.PrintDefaults()
+	}
+	var file *os.File
+
+	if *output != "" {
+		var err error
+		file, err = os.OpenFile(*output, os.O_CREATE|os.O_APPEND|os.O_WRONLY, os.ModePerm)
+		if err != nil {
+			file, err = os.Create(*output)
+			fmt.Printf("Create file to write result: %s\n", *output)
+		}
 	}
 
 	var (
@@ -86,12 +101,12 @@ func main() {
 			dnskey = k
 		}
 	}
-	var cert []byte
-	if *certificate != "" {
-		if bytes, err := os.ReadFile(*certificate); err != nil {
-			fmt.Fprintf(os.Stderr, "Failure to open %s: %s\n", *certificate, err.Error())
-		} else {
-			cert = bytes
+	var cfg *Config
+	if *rhineCheck {
+		var err error
+		cfg, err = Load(*flagcfgpath)
+		if err != nil {
+			log.Crit("Config loading failed", "error", err.Error())
 		}
 	}
 	var nameserver string
@@ -255,7 +270,7 @@ func main() {
 		}
 		m.Extra = append(m.Extra, o)
 	}
-	if *rhine {
+	if *rhineCheck {
 		Size(m)
 	}
 	if *tcp {
@@ -329,11 +344,11 @@ func main() {
 			if *short {
 				shortenMsg(r)
 			}
-			if *rhine {
+			if *rhineCheck {
 				if r.Rcode == dns.RcodeSuccess {
 					fmt.Printf("[RHINE] Checking rhine consistency\n")
 					if roa, _, ok := extractROAFromMsg(r); ok {
-						if !verifyRhineROA(roa, cert) {
+						if !verifyRhineROA(roa, cfg.CACertificateFile, cfg.LoggerPubKeyFile) {
 							fmt.Printf("The ROA verify failed!")
 						} else {
 							dnskey = roa.dnskey
@@ -342,7 +357,13 @@ func main() {
 					rhineRRSigCheck(r, dnskey)
 				}
 			}
-
+			if *output != "" {
+				w := csv.NewWriter(file)
+				data := []string{*chain, fmt.Sprintf("%.3d", rtt/1e3)}
+				fmt.Printf("Write data: %s", data)
+				w.Write(data)
+				w.Flush()
+			}
 			fmt.Printf("%v", r)
 			fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %d bytes\n", rtt/1e3, nameserver, tcp, r.Len())
 		}
@@ -442,14 +463,14 @@ Query:
 		if *short {
 			shortenMsg(r)
 		}
-		if *rhine {
+		if *rhineCheck {
 			if r.Rcode == dns.RcodeSuccess {
 				fmt.Printf("[RHINE] Checking rhine consistency\n")
 				roa, _, ok := extractROAFromMsg(r)
 				if !ok {
 					fmt.Printf("[RHINE] The response doesn't contain correct ROA!\n")
 				} else {
-					if !verifyRhineROA(roa, cert) {
+					if !verifyRhineROA(roa, cfg.CACertificateFile, cfg.LoggerPubKeyFile) {
 						fmt.Printf("[RHINE] The ROA verify failed!\n")
 					}
 					dnskey = roa.dnskey
@@ -457,9 +478,22 @@ Query:
 				rhineRRSigCheck(r, dnskey)
 			}
 		}
+		if *output != "" {
+			w := csv.NewWriter(file)
+			data := []string{*chain, fmt.Sprintf("%.3d", rtt/1e3)}
+
+			if err := w.Write(data); err != nil {
+				fmt.Printf("\n failed to write, err:%s", err.Error())
+			} else {
+				fmt.Printf("Successfully write data: %s", data)
+			}
+			w.Flush()
+		}
 		fmt.Printf("%v", r)
 		fmt.Printf("\n;; query time: %.3d µs, server: %s(%s), size: %d bytes\n", rtt/1e3, nameserver, c.Net, r.Len())
 	}
+
+	defer file.Close()
 }
 
 func tsigKeyParse(s string) (algo, name, secret string, ok bool) {

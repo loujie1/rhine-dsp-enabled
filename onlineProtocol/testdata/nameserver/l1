@@ -1,0 +1,8 @@
+l1.:53 {
+    root ./zones
+    rhine l1.db {
+        scion off
+    }
+    log
+}
+
