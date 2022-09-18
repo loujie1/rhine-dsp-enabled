@@ -7,10 +7,10 @@ services:
     volumes:
       - ./testdata/nameserver:/nameserver/
     working_dir: /nameserver/
-    command: -conf Corefile_root
+    command: -conf root
     networks:
       app_net:
-        ipv4_address: 172.16.238.10
+        ipv4_address: 10.114.0.11
   
   l1:
     image: "server_dsp"
@@ -22,7 +22,7 @@ services:
     command: -conf l1
     networks:
       app_net:
-        ipv4_address: 172.16.238.11
+        ipv4_address: 10.114.0.4
   
   l2:
     image: "server_dsp"
@@ -34,7 +34,7 @@ services:
     command: -conf l2
     networks:
       app_net:
-        ipv4_address: 172.16.238.12
+        ipv4_address: 10.114.0.9
 
   l3:
     image: "server_dsp"
@@ -46,7 +46,7 @@ services:
     command: -conf l3
     networks:
       app_net:
-        ipv4_address: 172.16.238.13
+        ipv4_address: 10.114.0.8
 
   l4:
     image: "server_dsp"
@@ -58,7 +58,7 @@ services:
     command: -conf l4
     networks:
       app_net:
-        ipv4_address: 172.16.238.14
+        ipv4_address: 10.114.0.6
 
   l5:
     image: "server_dsp"
@@ -70,7 +70,7 @@ services:
     command: -conf l5
     networks:
       app_net:
-        ipv4_address: 172.16.238.15
+        ipv4_address: 10.114.0.3
 
   l6:
     image: "server_dsp"
@@ -82,7 +82,7 @@ services:
     command: -conf l6
     networks:
       app_net:
-        ipv4_address: 172.16.238.16
+        ipv4_address: 10.114.0.2
 
   l7:
     image: "server_dsp"
@@ -94,19 +94,8 @@ services:
     command: -conf l7
     networks:
       app_net:
-        ipv4_address: 172.16.238.17
+        ipv4_address: 10.114.0.10
 
-  l8:
-    image: "server_dsp"
-    ports:
-      - "10008:53/udp"
-    volumes:
-      - ./testdata/nameserver:/nameserver/
-    working_dir: /nameserver/
-    command: -conf l8
-    networks:
-      app_net:
-        ipv4_address: 172.16.238.18
 
   resolver:
     image: "resolver_dsp"
@@ -118,7 +107,7 @@ services:
     command: -config=./config.yml
     networks:
       app_net:
-        ipv4_address: 172.16.238.19
+        ipv4_address: 10.114.0.7
     depends_on:
       - root
 
@@ -127,5 +116,5 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: "172.16.238.0/24"
+        - subnet: "10.114.0.0/24"
         - subnet: "2001:3984:3989::/64"

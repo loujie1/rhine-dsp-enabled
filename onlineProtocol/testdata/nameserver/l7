@@ -1,8 +1,6 @@
-l7.l6.l5.l4.l3.l2.l1.:53 {
+level7.level6.level5.level4.level3.level2.level1.:53 {
     root ./zones
-    rhine l7.db {
-        scion off
-    }
+    rhine db.level7.level6.level5.level4.level3.level2.level1.signed
     log
 }
 

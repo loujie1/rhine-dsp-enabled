@@ -58,7 +58,7 @@ var (
 	opcode       = flag.String("opcode", "query", "set opcode to query|update|notify")
 	rcode        = flag.String("rcode", "success", "set rcode to noerror|formerr|nxdomain|servfail|...")
 	flagcfgpath  = flag.String("config", "q.conf", "location of the config file, if config file not found, a config will generate")
-	output       = flag.String("output", "output.csv", "location of the output file")
+	output       = flag.String("output", "", "location of the output file")
 	chain        = flag.String("chain", "3", "length of delegation chain")
 )
 
@@ -69,15 +69,6 @@ func main() {
 		flag.PrintDefaults()
 	}
 	var file *os.File
-
-	if *output != "" {
-		var err error
-		file, err = os.OpenFile(*output, os.O_CREATE|os.O_APPEND|os.O_WRONLY, os.ModePerm)
-		if err != nil {
-			file, err = os.Create(*output)
-			fmt.Printf("Create file to write result: %s\n", *output)
-		}
-	}
 
 	var (
 		qtype  []uint16
@@ -101,6 +92,16 @@ func main() {
 			dnskey = k
 		}
 	}
+
+	if *output != "" {
+		var err error
+		file, err = os.OpenFile(*output, os.O_CREATE|os.O_APPEND|os.O_WRONLY, os.ModePerm)
+		if err != nil {
+			file, err = os.Create(*output)
+			fmt.Printf("Create file to write result: %s\n", *output)
+		}
+	}
+
 	var cfg *Config
 	if *rhineCheck {
 		var err error
@@ -336,7 +337,7 @@ func main() {
 				fmt.Fprintf(os.Stderr, ";; %s\n", err.Error())
 				continue
 			}
-			rtt := time.Since(then)
+
 			if r.Id != m.Id {
 				fmt.Fprintf(os.Stderr, "Id mismatch\n")
 				continue
@@ -362,6 +363,7 @@ func main() {
 					rhineRRSigCheck(r, dnskey)
 				}
 			}
+			rtt := time.Since(then)
 			if *output != "" {
 				w := csv.NewWriter(file)
 				data := []string{*chain, fmt.Sprintf("%.3d", rtt/1e3)}

@@ -1,8 +1,6 @@
-l1.:53 {
+level1.:53 {
     root ./zones
-    rhine l1.db {
-        scion off
-    }
+    rhine db.level1.signed
     log
 }
 

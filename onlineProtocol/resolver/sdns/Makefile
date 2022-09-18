@@ -11,7 +11,7 @@ generate:
 
 .PHONY: build
 build:
-	$GOOS=linux go build
+	$ GOOS=linux go build
 
 .PHONY: tidy
 tidy:

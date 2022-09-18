@@ -3,7 +3,7 @@
     sign /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zonefile/root.db {
         rcert file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/rcert/root/root.key
         logger file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/logger/log.private
-        key file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zsk/l1/l1.key
+        key file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zsk/root/root.key
         directory /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/signed
     }
 }
