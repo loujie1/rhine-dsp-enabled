@@ -419,6 +419,7 @@ Query:
 			continue
 		}
 		r, rtt, err := c.Exchange(m, nameserver)
+		then := time.Now()
 	Redo:
 		switch err {
 		case nil:
@@ -478,9 +479,10 @@ Query:
 				rhineRRSigCheck(r, dnskey)
 			}
 		}
+		rtt = time.Since(then)
 		if *output != "" {
 			w := csv.NewWriter(file)
-			data := []string{*chain, fmt.Sprintf("%.3d", rtt/1e3)}
+			data := []string{fmt.Sprintf("%.3d", rtt/1e3)}
 
 			if err := w.Write(data); err != nil {
 				fmt.Printf("\n failed to write, err:%s", err.Error())

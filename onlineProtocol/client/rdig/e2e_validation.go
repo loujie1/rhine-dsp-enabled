@@ -105,7 +105,6 @@ func ParseVerifyRhineCertTxtEntry(txt *dns.TXT, certFile string) (*x509.Certific
 	apexname := strings.SplitAfter(name, DNSrhineCertPrefix)[1]
 
 	var CaCertPool *x509.CertPool
-	CaCertPool, _ = x509.SystemCertPool()
 
 	CaCertPool.AppendCertsFromPEM(CaCert)
 	if _, err := cert.Verify(x509.VerifyOptions{

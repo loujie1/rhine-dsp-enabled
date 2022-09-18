@@ -8,9 +8,9 @@
     }
 }
 
-l1.:10001 {
+level1.:10001 {
     root /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata
-    sign /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zonefile/l1.db {
+    sign /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zonefile/level1. {
         rcert file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/rcert/l1/l1.key
         logger file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/logger/log.private
         key file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zsk/l1/l1.key
@@ -18,9 +18,9 @@ l1.:10001 {
     }
 }
 
-l2.l1.:10002 {
+level2.level1.:10002 {
     root /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata
-    sign /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zonefile/l2.db {
+    sign /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zonefile/level2.level1. {
         rcert file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/rcert/l2/l2.l1.key
         logger file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/logger/log.private
         key file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zsk/l2/l2.l1.key
@@ -29,9 +29,9 @@ l2.l1.:10002 {
 }
 
 
-l3.l2.l1.:10003 {
+level3.level2.level1.:10003 {
     root /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata
-    sign /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zonefile/l3.db {
+    sign /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zonefile/level3.level2.level1. {
         rcert file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/rcert/l3/l3.l2.l1.key
         logger file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/logger/log.private
         key file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zsk/l3/l3.l2.l1.key
@@ -39,9 +39,9 @@ l3.l2.l1.:10003 {
     }
 }
 
-l4.l3.l2.l1.:10004 {
+level4.level3.level2.level1.:10004 {
     root /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata
-    sign /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zonefile/l4.db {
+    sign /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zonefile/level4.level3.level2.level1. {
         rcert file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/rcert/l4/l4.l3.l2.l1.key
         logger file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/logger/log.private
         key file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zsk/l4/l4.l3.l2.l1.key
@@ -49,9 +49,9 @@ l4.l3.l2.l1.:10004 {
     }
 }
 
-l5.l4.l3.l2.l1.:10005 {
+level5.level4.level3.level2.level1.:10005 {
     root /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata
-    sign /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zonefile/l5.db {
+    sign /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zonefile/level5.level4.level3.level2.level1. {
         rcert file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/rcert/l5/l5.l4.l3.l2.l1.key
         logger file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/logger/log.private
         key file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zsk/l5/l5.l4.l3.l2.l1.key
@@ -59,9 +59,9 @@ l5.l4.l3.l2.l1.:10005 {
     }
 }
 
-l6.l5.l4.l3.l2.l1.:10006 {
+level6.level5.level4.level3.level2.level1.:10006 {
     root /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata
-    sign /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zonefile/l6.db {
+    sign /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zonefile/level6.level5.level4.level3.level2.level1. {
         rcert file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/rcert/l6/l6.l5.l4.l3.l2.l1.key
         logger file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/logger/log.private
         key file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zsk/l6/l6.l5.l4.l3.l2.l1.key
@@ -69,22 +69,12 @@ l6.l5.l4.l3.l2.l1.:10006 {
     }
 }
 
-l7.l6.l5.l4.l3.l2.l1.:10007 {
+level7.level6.level5.level4.level3.level2.level1.:10007 {
     root /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata
-    sign /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zonefile/l7.db {
+    sign /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zonefile/level7.level6.level5.level4.level3.level2.level1. {
         rcert file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/rcert/l7/l7.l6.l5.l4.l3.l2.l1.key
         logger file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/logger/log.private
         key file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zsk/l7/l7.l6.l5.l4.l3.l2.l1.key
-        directory /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/signed
-    }
-}
-
-l8.l7.l6.l5.l4.l3.l2.l1.:10008 {
-    root /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata
-    sign /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zonefile/l8.db {
-        rcert file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/rcert/l8/l8.l7.l6.l5.l4.l3.l2.l1.key
-        logger file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/logger/log.private
-        key file /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/zsk/l8/l8.l6.l5.l4.l3.l2.l1.key
         directory /Users/jielou/Documents/GitHub/RHINE-Prototype/onlineProtocol/nameserver/coredns/testdata/signed
     }
 }
