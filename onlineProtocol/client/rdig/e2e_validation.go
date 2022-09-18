@@ -28,18 +28,6 @@ type ROA struct {
 	keySig *dns.RRSIG
 }
 
-func Size(m *dns.Msg) {
-	o := m.IsEdns0()
-	if o != nil {
-		o.SetUDPSize(defaultUDPBufSize)
-		return
-	}
-
-	o = &dns.OPT{Hdr: dns.RR_Header{Name: ".", Rrtype: dns.TypeOPT}}
-	o.SetUDPSize(defaultUDPBufSize)
-	m.Extra = append(m.Extra, o)
-}
-
 func verifyRhineROA(roa *ROA, certFile string, pubKeyFile string) bool {
 	rcert, publiKey, err := ParseVerifyRhineCertTxtEntry(roa.rcert, certFile)
 	if err != nil {
@@ -94,7 +82,6 @@ func ParseVerifyRhineCertTxtEntry(txt *dns.TXT, certFile string) (*x509.Certific
 
 	certdecoded, _ := base64.StdEncoding.DecodeString(encodedcert)
 
-	CaCert, err := os.ReadFile(certFile)
 	cert, err := x509.ParseCertificate(certdecoded)
 	if err != nil {
 		fmt.Println("Parsing Rhine Cert failed! ", err)
@@ -104,8 +91,8 @@ func ParseVerifyRhineCertTxtEntry(txt *dns.TXT, certFile string) (*x509.Certific
 	name := txt.Header().Name
 	apexname := strings.SplitAfter(name, DNSrhineCertPrefix)[1]
 
-	var CaCertPool *x509.CertPool
-
+	CaCertPool := x509.NewCertPool()
+	CaCert, err := os.ReadFile(certFile)
 	CaCertPool.AppendCertsFromPEM(CaCert)
 	if _, err := cert.Verify(x509.VerifyOptions{
 		DNSName: apexname,

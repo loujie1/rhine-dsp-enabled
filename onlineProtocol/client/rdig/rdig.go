@@ -270,8 +270,13 @@ func main() {
 		}
 		m.Extra = append(m.Extra, o)
 	}
+
 	if *rhineCheck {
-		Size(m)
+		o := new(dns.OPT)
+		o.Hdr.Name = "."
+		o.Hdr.Rrtype = dns.TypeOPT
+		o.SetUDPSize(dns.DefaultMsgSize)
+		m.Extra = append(m.Extra, o)
 	}
 	if *tcp {
 		co := new(dns.Conn)
@@ -418,8 +423,8 @@ Query:
 			fmt.Printf("\n;; xfr size: %d records (envelopes %d)\n", record, envelope)
 			continue
 		}
-		r, rtt, err := c.Exchange(m, nameserver)
 		then := time.Now()
+		r, rtt, err := c.Exchange(m, nameserver)
 	Redo:
 		switch err {
 		case nil:
@@ -430,7 +435,7 @@ Query:
 		}
 		if r.Truncated {
 			if *fallback {
-				if !*dnssec {
+				if !*dnssec && !*rhineCheck {
 					fmt.Printf(";; Truncated, trying %d bytes bufsize\n", dns.DefaultMsgSize)
 					o := new(dns.OPT)
 					o.Hdr.Name = "."
