@@ -1,0 +1,6 @@
+level4.level3.level2.level1.	604800	IN	SOA	ns.level4.level3.level2.level1. hostmaster.level4.level3.level2.level1. 1659288904 604800 86400 2419200 604800
+level4.level3.level2.level1.	604800	IN	NS	ns.level4.level3.level2.level1.
+
+level5.level4.level3.level2.level1.	604800	IN	NS	ns.level5.level4.level3.level2.level1.
+ns.level5.level4.level3.level2.level1.	604800	IN	A	10.114.16.10
+level5.level4.level3.level2.level1.	604800	IN	DS	51849 15 2 AD4DFA95184AF77AF8AF3E292B9CAFE194F5EB56516747153EC3555625402C1A
